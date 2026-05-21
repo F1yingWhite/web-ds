@@ -41,7 +41,6 @@ function normalizeModel(value) {
 function App() {
   const [session, setSession] = useState(null);
   const [appLoading, setAppLoading] = useState(true);
-  const [authMode, setAuthMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authStatus, setAuthStatus] = useState("idle");
@@ -142,28 +141,64 @@ function App() {
     setAuthStatus("loading");
     setAuthMessage("");
 
-    const action =
-      authMode === "login"
-        ? supabase.auth.signInWithPassword({ email: email.trim(), password })
-        : supabase.auth.signUp({ email: email.trim(), password });
+    if (authMode === "login") {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    const { data, error: authError } = await action;
+      if (authError) {
+        setAuthStatus("error");
+        setAuthMessage(authError.message);
+        return;
+      }
 
-    if (authError) {
-      setAuthStatus("error");
-      setAuthMessage(authError.message);
-      return;
+      setPassword("");
+      setAuthStatus("idle");
+    } else {
+      // Register via Edge Function to skip email confirmation
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const fnUrl = `${supabaseUrl}/functions/v1/create-user`;
+
+      try {
+        const res = await fetch(fnUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({ email: email.trim(), password }),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          setAuthStatus("error");
+          setAuthMessage(result.error || "注册失败");
+          return;
+        }
+
+        // Auto-login after successful registration
+        const { error: loginErr } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (loginErr) {
+          setAuthStatus("success");
+          setAuthMessage("注册成功，请登录");
+          setAuthMode("login");
+          return;
+        }
+
+        setPassword("");
+        setAuthStatus("idle");
+      } catch {
+        setAuthStatus("error");
+        setAuthMessage("注册请求失败，请稍后重试");
+      }
     }
-
-    if (authMode === "register" && !data.session) {
-      setAuthStatus("success");
-      setAuthMessage("注册成功，请完成邮箱验证后登录");
-      setAuthMode("login");
-      return;
-    }
-
-    setPassword("");
-    setAuthStatus("idle");
   }
 
   async function signOut() {
