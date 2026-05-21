@@ -243,6 +243,33 @@ textarea:focus {
   flex: 1;
 }
 
+.prompt-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #ccd8cf;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #4c5c54;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  border-color: #8ab09a;
+  background: #f4faf6;
+  color: #2e5141;
+}
+
 .prompt-field textarea {
   flex: 1;
   min-height: 320px;
@@ -463,6 +490,68 @@ textarea:focus {
   .panel {
     min-height: 620px;
   }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.modal-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(900px, 94vw);
+  max-height: 90vh;
+  padding: 24px;
+  border: 1px solid #dfe5dc;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 56px rgba(41, 52, 45, 0.18);
+}
+
+.modal-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-heading h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-textarea {
+  flex: 1;
+  min-height: 50vh;
+  padding: 14px;
+  border: 1px solid #ccd8cf;
+  border-radius: 6px;
+  background: #fbfcfb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+}
+
+.modal-textarea:focus {
+  border-color: #4b8d6c;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(75, 141, 108, 0.15);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 @media (max-width: 760px) {

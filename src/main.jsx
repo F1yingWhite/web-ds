@@ -4,6 +4,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clipboard,
+  Expand,
   FileText,
   KeyRound,
   Loader2,
@@ -59,6 +60,21 @@ function App() {
   const [reasoning, setReasoning] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [promptModalOpen, setPromptModalOpen] = useState(false);
+  const [tempPrompt, setTempPrompt] = useState("");
+
+  useEffect(() => {
+    if (!promptModalOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setPromptModalOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [promptModalOpen]);
 
   const canSubmit = useMemo(
     () =>
@@ -505,7 +521,20 @@ function App() {
           </label>
 
           <label className="field prompt-field">
-            <span>提示词</span>
+            <span className="prompt-label-row">
+              <span>提示词</span>
+              <button
+                className="icon-button"
+                type="button"
+                title="放大编辑提示词"
+                onClick={() => {
+                  setTempPrompt(prompt);
+                  setPromptModalOpen(true);
+                }}
+              >
+                <Expand size={15} />
+              </button>
+            </span>
             <textarea
               value={prompt}
               onChange={(event) => {
@@ -592,6 +621,48 @@ function App() {
           </button>
         </section>
       </form>
+
+      {promptModalOpen ? (
+        <div className="modal-overlay" onClick={() => setPromptModalOpen(false)}>
+          <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-heading">
+              <h2>编辑提示词</h2>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => setPromptModalOpen(false)}
+              >
+                <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>&times;</span>
+              </button>
+            </div>
+            <textarea
+              className="modal-textarea"
+              value={tempPrompt}
+              onChange={(e) => setTempPrompt(e.target.value)}
+            />
+            <div className="modal-actions">
+              <button
+                className="ghost-button"
+                type="button"
+                onClick={() => setPromptModalOpen(false)}
+              >
+                取消
+              </button>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  setPrompt(tempPrompt);
+                  setSettingsStatus("editing");
+                  setPromptModalOpen(false);
+                }}
+              >
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
