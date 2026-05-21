@@ -158,25 +158,20 @@ function App() {
       setAuthStatus("idle");
     } else {
       // Register via Edge Function to skip email confirmation
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const fnUrl = `${supabaseUrl}/functions/v1/create-user`;
-
       try {
-        const res = await fetch(fnUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabaseAnonKey}`,
-          },
-          body: JSON.stringify({ email: email.trim(), password }),
+        const { data: result, error: fnError } = await supabase.functions.invoke("create-user", {
+          body: { email: email.trim(), password },
         });
 
-        const result = await res.json();
-
-        if (!res.ok) {
+        if (fnError) {
           setAuthStatus("error");
-          setAuthMessage(result.error || "注册失败");
+          setAuthMessage(fnError.message || "注册失败");
+          return;
+        }
+
+        if (result?.error) {
+          setAuthStatus("error");
+          setAuthMessage(result.error);
           return;
         }
 
