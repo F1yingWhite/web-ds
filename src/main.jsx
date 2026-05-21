@@ -41,6 +41,7 @@ function normalizeModel(value) {
 function App() {
   const [session, setSession] = useState(null);
   const [appLoading, setAppLoading] = useState(true);
+  const [authMode, setAuthMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authStatus, setAuthStatus] = useState("idle");
