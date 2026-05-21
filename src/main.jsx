@@ -14,6 +14,7 @@ import {
   Upload,
 } from "lucide-react";
 import defaultPrompt from "../prompt.md?raw";
+import { decrypt, encrypt } from "./crypto";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
 import "./styles.css";
 
@@ -119,7 +120,8 @@ function App() {
         return;
       }
 
-      setApiKey(data?.api_key || "");
+      const decrypted = await decrypt(data?.api_key || "");
+      setApiKey(decrypted);
       setBaseUrl(data?.base_url || DEFAULT_BASE_URL);
       setModel(normalizeModel(data?.model));
       setPrompt(data?.prompt?.trim() ? data.prompt : DEFAULT_PROMPT);
@@ -185,10 +187,12 @@ function App() {
     setSettingsStatus("saving");
     setSettingsMessage("");
 
+    const encryptedKey = await encrypt(apiKey.trim());
+
     const { error: saveError } = await supabase.from("user_settings").upsert(
       {
         user_id: session.user.id,
-        api_key: apiKey.trim(),
+        api_key: encryptedKey,
         base_url: baseUrl.trim() || DEFAULT_BASE_URL,
         model,
         prompt,
