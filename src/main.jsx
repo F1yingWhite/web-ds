@@ -157,21 +157,21 @@ function App() {
       setPassword("");
       setAuthStatus("idle");
     } else {
-      // Register via Edge Function to skip email confirmation
+      // Register via Edge Function (--no-verify-jwt) to skip email confirmation
       try {
-        const { data: result, error: fnError } = await supabase.functions.invoke("create-user", {
-          body: { email: email.trim(), password },
+        const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`;
+
+        const res = await fetch(fnUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), password }),
         });
 
-        if (fnError) {
-          setAuthStatus("error");
-          setAuthMessage(fnError.message || "注册失败");
-          return;
-        }
+        const result = await res.json();
 
-        if (result?.error) {
+        if (!res.ok) {
           setAuthStatus("error");
-          setAuthMessage(result.error);
+          setAuthMessage(result.error || "注册失败");
           return;
         }
 
