@@ -40,6 +40,14 @@ export async function encrypt(plaintext) {
   return ivBase64 + ":" + ctBase64;
 }
 
+export function getStoredKey() {
+  return localStorage.getItem(STORAGE_KEY);
+}
+
+export function restoreKey(rawKeyJson) {
+  if (rawKeyJson) localStorage.setItem(STORAGE_KEY, rawKeyJson);
+}
+
 export async function decrypt(encoded) {
   if (!encoded || !encoded.includes(":")) return "";
   try {
@@ -55,6 +63,6 @@ export async function decrypt(encoded) {
     return new TextDecoder().decode(decrypted);
   } catch {
     // decryption failed (e.g. key lost after clearing browser data)
-    return "";
+    return null;
   }
 }

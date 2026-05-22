@@ -15,7 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import defaultPrompt from "../prompt.md?raw";
-import { decrypt, encrypt } from "./crypto";
+import { decrypt, encrypt, getStoredKey, restoreKey } from "./crypto";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
 import "./styles.css";
 
@@ -124,7 +124,7 @@ function App() {
 
       const { data, error: settingsError } = await supabase
         .from("user_settings")
-        .select("api_key, base_url, model, prompt")
+        .select("api_key, base_url, model, prompt, enc_key")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
@@ -136,7 +136,23 @@ function App() {
         return;
       }
 
-      const decrypted = await decrypt(data?.api_key || "");
+      let decrypted = await decrypt(data?.api_key || "");
+
+      // If decryption failed and DB has a stored encryption key, try restoring it
+      if (data?.api_key && decrypted === null && data?.enc_key) {
+        restoreKey(data.enc_key);
+        decrypted = await decrypt(data?.api_key || "");
+      }
+
+      if (data?.api_key && decrypted === null) {
+        setApiKey("");
+        setBaseUrl(data?.base_url || DEFAULT_BASE_URL);
+        setModel(normalizeModel(data?.model));
+        setPrompt(data?.prompt?.trim() ? data.prompt : DEFAULT_PROMPT);
+        setSettingsStatus("error");
+        setSettingsMessage("加密密钥已变更（更换了浏览器或清除了浏览器数据），请重新填写 API Key 并保存。");
+        return;
+      }
       setApiKey(decrypted);
       setBaseUrl(data?.base_url || DEFAULT_BASE_URL);
       setModel(normalizeModel(data?.model));
@@ -243,6 +259,7 @@ function App() {
         base_url: baseUrl.trim() || DEFAULT_BASE_URL,
         model,
         prompt,
+        enc_key: getStoredKey(),
       },
       { onConflict: "user_id" }
     );

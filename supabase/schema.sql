@@ -1,6 +1,7 @@
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
   api_key text not null default '',
+  enc_key text not null default '',
   base_url text not null default 'https://api.deepseek.com',
   model text not null default 'deepseek-v4-flash',
   prompt text not null default '',
